@@ -1,0 +1,43 @@
+Academic Year 2025-2026
+Statement of the Intelligent Systems practical assignment to be carried out with JADE
+
+**Requirements**
+The practical assignment should preferably be done in groups, with a maximum of up to 5 members per group.
+The work will consist of implementing an intelligent system (multi-agent system), using the Jade and Eclipse tools presented in class. It is possible to use additional tools that students consider appropriate. However, the agent platform must be JADE or PADE (and not others such as those based on langchain).
+
+**Description**
+Each group can freely choose the objectives of the multi-agent system to be implemented.
+The work will consist of the implementation of a multi-agent system in which there are agents of different natures:
+
+* The multi-agent system must include at least one perception/information acquisition agent. Said agent must obtain external information. For this, it is possible to choose between different information sources such as artificial vision perception systems, devices that provide information, information retrieval (in texts, on the web, ...), information capture through user interaction, etc. It is also possible to combine more than one information source.
+* The multi-agent system must include an agent capable of performing calculations or processing with a certain degree of complexity or a certain degree of intelligence.
+* The multi-agent system must include an agent that allows information to be displayed through a user interface.
+
+Each agent in the multi-agent system must incorporate Jade behaviors that allow it to implement its capabilities.
+The agents of the multi-agent system must interact with the Jade Directory Facilitator, registering services and making queries to identify services to consume.
+The agents of the multi-agent system must exchange ACL messages and implement at least one message filter in blocking mode.
+
+**Submission:**
+The practical assignment is submitted through the Virtual Classroom, with a deadline: May 25, 2026. Late submissions are not allowed.
+Only one of the group members will make the submission through the virtual classroom.
+The following must be submitted (in a single compressed file):
+
+* A document identifying the members that make up the practical group
+* A pointer to the GitHub repository with the assignment's code. The GitHub must have a README and documentation on the execution of the assignment, including:
+* Installation instructions
+* Capture of dependencies needed to install the project
+* Execution instructions
+* Example data to run the assignment
+* A diagram of the system architecture
+* An AI declaration, indicating how it has been used in the project.
+
+
+
+**Evaluation:**
+The practical work carried out will be evaluated taking into account that it conforms to the requirements and the description of the assignment.
+In group work, the quality of the submission is also evaluated (order, punctuality of the submission, formatting errors...).
+It is necessary for the group to carry out a defense of the assignment following the procedure that will be indicated through the subject's Moodle.
+
+**Notes:**
+For the realization of the assignment, the materials and exercises carried out in class and available in the virtual classroom can be used.
+In case of doubts, contact the professor daniel.garijo@upm.es
