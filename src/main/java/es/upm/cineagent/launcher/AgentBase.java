@@ -7,17 +7,11 @@ import jade.domain.FIPAAgentManagement.DFAgentDescription;
 import jade.domain.FIPAAgentManagement.ServiceDescription;
 import java.util.Arrays;
 
-/**
- * Agente base que proporciona funcionalidades comunes:
- * registro en el DF, búsqueda de agentes y logging.
- * Todos los agentes del sistema heredan de esta clase.
- */
 public abstract class AgentBase extends Agent {
 
-    // Tipo de agente (definido en AgentModel)
     protected AgentModel type;
 
-    // Parámetros recibidos al crear el agente
+   
     protected String[] params;
 
     @Override
@@ -30,11 +24,7 @@ public abstract class AgentBase extends Agent {
         }
     }
 
-    /**
-     * Busca agentes de un tipo concreto en el Directory Facilitator.
-     * @param type Tipo de agente a buscar (AgentModel)
-     * @return Array de descriptores de agentes encontrados
-     */
+   
     public DFAgentDescription[] getAgentsDF(AgentModel type) {
         DFAgentDescription template = new DFAgentDescription();
         ServiceDescription templateSd = new ServiceDescription();
@@ -42,7 +32,10 @@ public abstract class AgentBase extends Agent {
         template.addServices(templateSd);
         DFAgentDescription[] result = new DFAgentDescription[0];
         try {
-            result = DFService.search(this, template);
+            jade.domain.FIPAAgentManagement.SearchConstraints sc = 
+                new jade.domain.FIPAAgentManagement.SearchConstraints();
+            sc.setMaxResults((long) 10);
+            result = DFService.search(this, template, sc);
         } catch (FIPAException e) {
             loge("Error al buscar en el DF: " + e.getMessage());
         }
@@ -71,9 +64,7 @@ public abstract class AgentBase extends Agent {
         }
     }
 
-    /**
-     * Elimina el registro de este agente del Directory Facilitator.
-     */
+    
     public void deregisterAgentDF() {
         try {
             DFService.deregister(this);

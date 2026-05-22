@@ -1,61 +1,60 @@
 package es.upm.cineagent.launcher;
 
+import es.upm.cineagent.agents.CriticAgent;
 import es.upm.cineagent.agents.DisplayAgent;
-import es.upm.cineagent.agents.ProcessingAgent;
+import es.upm.cineagent.agents.JuryAgent;
 import es.upm.cineagent.agents.SearchAgent;
 import es.upm.cineagent.agents.UserAgent;
 import jade.core.Profile;
 import jade.core.ProfileImpl;
 import jade.wrapper.StaleProxyException;
 
-/**
- * Clase principal que lanza la plataforma JADE y crea todos los agentes
- * del sistema CineAgent.
- *
- * Ejecución: Run as Java Application sobre esta clase.
- */
 public class Main {
 
     private static jade.wrapper.AgentContainer cc;
 
     private static void loadBoot() {
-        // Creamos la instancia de entorno de ejecución JADE
         jade.core.Runtime rt = jade.core.Runtime.instance();
         rt.setCloseVM(true);
         System.out.println("Runtime creado");
 
-        // Configuración del contenedor principal
         Profile profile = new ProfileImpl(null, 1200, null);
         System.out.println("Perfil creado");
 
-        // Creamos el contenedor principal de JADE
         System.out.println("Iniciando plataforma JADE...");
         cc = rt.createMainContainer(profile);
 
         try {
-            // Contenedor adicional
             ProfileImpl pContainer = new ProfileImpl(null, 1200, null);
             rt.createAgentContainer(pContainer);
             System.out.println("Contenedores creados");
 
-            // Agente RMA (interfaz de administración de JADE)
             cc.createNewAgent("rma", "jade.tools.rma.rma", new Object[0]).start();
 
-            // Arrancamos los agentes en orden:
-            // Primero Display, Processing y Search (para que estén registrados en el DF)
+            // Receptores primero
             cc.createNewAgent(DisplayAgent.NICKNAME,
                     DisplayAgent.class.getName(), new Object[]{"0"}).start();
 
-            cc.createNewAgent(ProcessingAgent.NICKNAME,
-                    ProcessingAgent.class.getName(), new Object[]{"0"}).start();
+            cc.createNewAgent(JuryAgent.NICKNAME,
+                    JuryAgent.class.getName(), new Object[]{"0"}).start();
 
+            cc.createNewAgent(CriticAgent.NICKNAME_RATING,
+                    CriticAgent.class.getName(), new Object[]{"RATING"}).start();
+
+            cc.createNewAgent(CriticAgent.NICKNAME_POPULARITY,
+                    CriticAgent.class.getName(), new Object[]{"POPULARITY"}).start();
+
+            cc.createNewAgent(CriticAgent.NICKNAME_GENRE,
+                    CriticAgent.class.getName(), new Object[]{"GENRE_MATCH"}).start();
+
+            // SearchAgent después
             cc.createNewAgent(SearchAgent.NICKNAME,
                     SearchAgent.class.getName(), new Object[]{"0"}).start();
 
-            // Esperamos a que los agentes anteriores se registren en el DF
+            // Esperamos registro en el DF
             Thread.sleep(1500);
 
-            // Último en arrancar: UserAgent (muestra la interfaz al usuario)
+            // UserAgent el último
             cc.createNewAgent(UserAgent.NICKNAME,
                     UserAgent.class.getName(), new Object[]{"0"}).start();
 
