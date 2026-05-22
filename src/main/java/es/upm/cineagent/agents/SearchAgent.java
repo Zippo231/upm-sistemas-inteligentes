@@ -13,9 +13,24 @@ import jade.lang.acl.MessageTemplate;
 public class SearchAgent extends AgentBase {
 
     public static final String NICKNAME = "SearchAgent";
+    // add the config.properties file in the main folder. 
+    private String getApiKey() {
+        try {
+            java.util.Properties prop = new java.util.Properties();
+            prop.load(new java.io.FileInputStream("config.properties"));
+            return prop.getProperty("TMDB_API_KEY");
+        } catch (Exception e) {
+            System.err.println("File config.properties not found. Bro check the whatsapp group");
+            return "KEY_NOT_FOUND";
+        }
+    }
 
-    private static final String TMDB_API_KEY = "be61f1e7814bfb5f67cae2b1a3227c8f";
+    // - OPTION 2 - uncomment next code line - and fix the "queryTMDB"
+    // !-!-!-! THE API KEY IS IN THE WHATSAPP GROUP !-!-!-!
+    //private static final String TMDB_API_KEY = "PUT YOUR KEY HERE";
     private static final String TMDB_BASE_URL = "https://api.themoviedb.org/3";
+
+  
 
     @Override
     protected void setup() {
