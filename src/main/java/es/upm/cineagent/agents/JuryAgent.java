@@ -132,6 +132,15 @@ public class JuryAgent extends AgentBase {
                     + String.format("%.2f", avgVariance) + ").");
             }
 
+            // Normalizamos bordaScore → cineAgentScore en rango [0, 1]
+            double maxBorda = EXPECTED_VOTES * (double) sorted.size();
+            for (JsonObject movie : sorted) {
+                double borda = movie.get("bordaScore").getAsDouble();
+                double normalized = maxBorda > 0 ? borda / maxBorda : 0;
+                movie.addProperty("cineAgentScore",
+                    Math.round(normalized * 100.0) / 100.0);
+            }
+
             // Top 10
             JsonArray result = new JsonArray();
             int limit = Math.min(10, sorted.size());

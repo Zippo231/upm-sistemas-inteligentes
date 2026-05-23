@@ -22,52 +22,83 @@ Sistema multiagente desarrollado en JADE que recomienda películas adaptadas a l
 ## 🏗️ Arquitectura del sistema
 
 ```
-┌─────────────────────────────────────────────────────────────────┐
-│                        Plataforma JADE                          │
-│                                                                 │
-│  ┌─────────────┐   REQUEST      ┌──────────────────┐           │
-│  │ UserAgent   │ ─────────────► │  SearchAgent     │           │
-│  │             │   [prefs JSON] │  (Percepción)    │           │
-│  │  Formulario │                │  Consulta TMDB   │           │
-│  │  de búsqueda│ ◄── CONFIRM ── │                  │           │
-│  └─────────────┘                └────────┬─────────┘           │
-│                                          │ REQUEST              │
-│                                          │ [movies + prefs]     │
-│                                          ▼                      │
-│  ┌─────────────┐   INFORM       ┌──────────────────┐           │
-│  │DisplayAgent │ ◄───────────── │ ProcessingAgent  │           │
-│  │             │  [ranked top10]│  (Procesamiento) │           │
-│  │  Resultados │                │  Algoritmo score │           │
-│  │  con pósters│ ──── CONFIRM ──►                  │           │
-│  └─────────────┘                └──────────────────┘           │
-│                                                                 │
-│                   Directory Facilitator (DF)                    │
-│              [Todos los agentes registrados aquí]               │
-└─────────────────────────────────────────────────────────────────┘
+┌────────────────────────────────────────────────────────────────────────────────────┐
+│                          Plataforma JADE                                           │
+│                                                                                    │
+│  ┌─────────────┐  REQUEST [movie-search]   ┌───────────────────┐                   │
+│  │  UserAgent  │ ────────────────────────► │   SearchAgent     │                   │
+│  │             │                           │   (Percepción)    │                   │
+│  │  Formulario │ ◄─ CONFIRM─────┐          │   Consulta TMDB   │                   │
+│  └─────────────┘                │          └────────┬──────────┘                   │
+│                                 │                   │ PROPOSE                      │
+│                                 │                   │ [movie-evaluate]             │ 
+│                                 │                   │                              │
+│                                 │         ┌───────────────┬───────────────┐        │
+│                                 │         ▼               ▼               ▼        │
+│                                 │   ┌────────────┐┌────────────────┐┌───────────┐  │
+│                                 │   │            ││                ││           │  │
+│                                 │   │CriticRating││CriticPopularity││CriticGenre│  │
+│                                 │   │            ││                ││           │  │
+│                                 │   └─────┬──────┘└───────┬────────┘└─────┬─────┘  │
+│                                 │         └───────────────────────────────┘        │
+│                                 │            │ INFORM                              │
+│                                 │            │ [critic-vote]                       │
+│                                 │            ▼                                     │
+│                                 │   ┌────────────────────┐                         │
+│                                 │   │    JuryAgent       │                         │
+│                                 │   │  Algoritmo Borda   │                         │
+│                                 │   └────────┬───────────┘                         │
+│                                 │            │ INFORM                              │
+│                                 │            │ [movie-results]                     │
+│                                 │            ▼                                     │
+│                                 │   ┌────────────────────┐                         │
+│                                 └── │   DisplayAgent     │                         │
+│                             CONFIRM │   Resultados con   │                         │
+│                                     │   pósters          │                         │
+│                                     └────────────────────┘                         │
+│                                                                                    │
+│                      Directory Facilitator (DF)                                    │
+│               [Todos los agentes registrados aquí]                                 │
+└────────────────────────────────────────────────────────────────────────────────────┘
 ```
 
 ### Agentes
 
 | Agente | Rol | Comportamiento JADE |
 |--------|-----|---------------------|
-| `UserAgent` | Recoge preferencias del usuario mediante formulario Swing | `CyclicBehaviour` + `blockingReceive` (filtro bloqueante) |
-| `SearchAgent` | Consulta la API de TMDB con los filtros del usuario | `CyclicBehaviour` + `blockingReceive` |
-| `ProcessingAgent` | Puntúa y ordena las películas con algoritmo multicriteria | `CyclicBehaviour` + `blockingReceive` |
-| `DisplayAgent` | Muestra el ranking en una ventana Swing con pósters | `CyclicBehaviour` + `blockingReceive` |
+| `UserAgent` | Recoge preferencias mediante formulario Swing y gestiona el ciclo de búsqueda | `CyclicBehaviour` + `blockingReceive` (filtro bloqueante esperando `CONFIRM`) |
+| `SearchAgent` | Consulta la API de TMDB con los filtros del usuario y distribuye las películas a los críticos | `CyclicBehaviour` + `blockingReceive` |
+| `CriticAgent` (×3) | Evalúa y ordena las películas según un criterio propio (valoración, popularidad o coincidencia de género) | `CyclicBehaviour` + `blockingReceive` |
+| `JuryAgent` | Recibe los tres rankings y los combina mediante el algoritmo de Borda para producir el ranking final | `CyclicBehaviour` + `blockingReceive` |
+| `DisplayAgent` | Muestra el top 10 en una ventana Swing con pósters cargados de forma asíncrona | `CyclicBehaviour` + `blockingReceive` |
 
-### Algoritmo de puntuación (ProcessingAgent)
+### Algoritmo de deliberación
+
+El sistema usa un proceso de votación en dos niveles:
+
+**Nivel 1 — Puntuación individual de cada CriticAgent:**
+
+| Crítico | Criterio |
+|---------|----------|
+| `CriticRating` | `vote_average / 10` — premia la calidad valorada por la comunidad |
+| `CriticPopularity` | `popularidad / máx. del conjunto` — premia las películas más vistas |
+| `CriticGenre` | `géneros coincidentes / géneros solicitados` — premia la relevancia al usuario |
+
+**Nivel 2 — Deliberación del JuryAgent (algoritmo de Borda):**
 
 ```
-puntuación_final =
-  coincidencia_géneros   × 0.40   (fracción de géneros solicitados presentes)
-  + valoración_TMDB      × 0.30   (vote_average / 10)
-  + popularidad          × 0.15   (normalizada respecto al máximo del conjunto)
-  + coincidencia_época   × 0.15   (1.0 si pertenece a la década, decrece con distancia)
+Para cada película en cada ranking:
+  puntos_borda = N − posición   (N puntos al 1.º, N−1 al 2.º, …, 1 al último)
+
+puntuación_final = suma de puntos_borda de los tres críticos
+
+Bonus: se calcula la varianza de posiciones entre críticos como
+indicador de consenso. Si varianza_media > 5.0 → ⚠️ consenso débil.
 ```
 
-Los pesos se ajustan automáticamente si el usuario no especifica alguno de los criterios.
-
----
+Los pesos de cada crítico son iguales. El consenso entre ellos se refleja
+en la varianza: una varianza baja indica que los tres críticos coinciden
+en la valoración de las películas; una varianza alta indica discrepancia.
 
 ## ⚙️ Instalación
 
@@ -153,7 +184,3 @@ En el desarrollo de este proyecto se ha utilizado Claude (Anthropic) como asiste
 Todo el código ha sido revisado, comprendido y adaptado por los miembros del grupo.
 
 ---
-
-## 👥 Miembros del grupo
-
-*(Añadir aquí los nombres)*
