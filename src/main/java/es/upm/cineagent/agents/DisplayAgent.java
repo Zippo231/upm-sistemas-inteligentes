@@ -58,6 +58,13 @@ public class DisplayAgent extends AgentBase {
         displayFrame.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
         displayFrame.setSize(620, 700);
 
+        try {
+            java.awt.Image taskbarIcon = javax.imageio.ImageIO.read(getClass().getResource("/logo.png"));
+            displayFrame.setIconImage(taskbarIcon);
+        } catch (Exception ex) { 
+            System.out.println("Error loading taskbar logo: " + ex.getMessage());
+        }
+
         JPanel mainPanel = new JPanel(new BorderLayout(0, 0));
 
         // Cabecera

@@ -322,7 +322,7 @@ public class UserAgent extends AgentBase {
             // Re-habilitamos el botón en el EDT
             SwingUtilities.invokeLater(() -> {
                 searchBtn.setEnabled(true);
-                searchBtn.setText("\uD83D\uDD0D  Buscar pel\u00edculas");
+                searchBtn.setText(" Buscar películas");
             });
         }
     }
